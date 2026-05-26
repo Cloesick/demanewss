@@ -113,7 +113,7 @@ async function buildPdfSkuImageIndex(pdfFileName: string): Promise<SkuImageIndex
     for (const entry of entries) {
       if (!entry.isFile()) continue;
       const ext = path.extname(entry.name).toLowerCase();
-      if (!['.png', '.jpg', '.jpeg', '.webp'].includes(ext)) continue;
+      if (!['.webp', '.jpg', '.jpeg', '.webp'].includes(ext)) continue;
 
       const base = path.basename(entry.name, ext);
 

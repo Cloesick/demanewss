@@ -53,7 +53,7 @@ export default function ProductDetailsCard({ product, className = '' }: ProductD
   // 3) product.image_paths first item
   // 4) legacy sku-based path
   // 5) placeholder
-  const legacySkuImage = product.sku ? `/product-images/${product.sku}.png` : undefined;
+  const legacySkuImage = product.sku ? `/product-images/${product.sku}.webp` : undefined;
   const imageUrl = product.imageUrl || 
                    product.media?.find(m => m.role === 'main')?.url ||
                    product.image_paths?.[0] ||

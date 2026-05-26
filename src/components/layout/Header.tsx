@@ -62,7 +62,7 @@ export default function Header() {
           <div className="mb-4 md:mb-0">
             <Link href="/" className="flex items-center">
               <img 
-                src="/assets/front/favicon/dema/logo.png" 
+                src="/assets/front/favicon/dema/logo.webp" 
                 alt="DEMA Shop Logo" 
                 className="h-12 w-auto" 
                 width={160}

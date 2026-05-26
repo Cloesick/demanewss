@@ -209,7 +209,7 @@ export default function ProductPage() {
   const categoryForImage = product.product_category?.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'product';
   const placeholderColor = getPlaceholderColor(product.sku || categoryForImage);
   const placeholderImageUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect width='800' height='600' fill='${encodeURIComponent(placeholderColor)}'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' text-anchor='middle' dominant-baseline='middle' fill='%23666'%3E${encodeURIComponent(categoryForImage)}%3C/text%3E%3C/svg%3E`;
-  const legacySkuImageUrl = product.sku ? `/product-images/${product.sku}.png` : undefined;
+  const legacySkuImageUrl = product.sku ? `/product-images/${product.sku}.webp` : undefined;
   const imageUrl = product.imageUrl || legacySkuImageUrl || placeholderImageUrl;
   
   const priceNumber = product.dimensions_mm_list?.[0]

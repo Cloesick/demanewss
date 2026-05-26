@@ -73,7 +73,7 @@ async function main() {
   for (const { pdf, page: pg } of pairs) {
     const pdfAbs = path.join(PDF_DIR, pdf);
     const base = path.parse(pdf).name;
-    const out = path.join(OUT_DIR, `${base}_${pg}.png`);
+    const out = path.join(OUT_DIR, `${base}_${pg}.webp`);
     try {
       if (!fs.existsSync(pdfAbs)) { results.push({ pdf, page: pg, ok: false, note: 'pdf missing' }); continue; }
       // Always re-render to ensure correct page and fully rendered output
@@ -93,7 +93,7 @@ async function main() {
     const pg = (Array.isArray(it.source_pages) && it.source_pages.length) ? it.source_pages[0] : null;
     if (!src || !pg) continue;
     const base = path.parse(src).name;
-    const rel = path.posix.join('public', 'images', 'pdf_pages', `${base}_${pg}.png`).replace(/\\/g, '/');
+    const rel = path.posix.join('public', 'images', 'pdf_pages', `${base}_${pg}.webp`).replace(/\\/g, '/');
     mapping[it.sku] = {
       image_path: rel,
       image_type: 'page',

@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: dict['metadata.description'] || '',
     metadataBase: new URL('https://www.demashop.be'),
     alternates: { canonical: '/' },
-    icons: { icon: [{ url: '/assets/front/favicon/dema/favicon.png' }] },
+    icons: { icon: [{ url: '/assets/front/favicon/dema/favicon.webp' }] },
     other: { 'theme-color': '#00adef' },
   };
 }

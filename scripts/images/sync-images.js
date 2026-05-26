@@ -13,7 +13,7 @@ function ensureDir(dir) {
 }
 
 function extractSkusFromFilename(filename) {
-  // Expect patterns like: PREFIX_12345+67890_IMG.png or PREFIX_12345_IMG.png
+  // Expect patterns like: PREFIX_12345+67890_IMG.webp or PREFIX_12345_IMG.webp
   const match = filename.match(/_([^_]+)_IMG\.[a-zA-Z0-9]+$/);
   if (!match) return [];
 
@@ -47,7 +47,7 @@ function main() {
 
   walkDir(SOURCE_DIR, (fullPath, name) => {
     // Only handle png files for now
-    if (!name.toLowerCase().endsWith('.png')) return;
+    if (!name.toLowerCase().endsWith('.webp')) return;
 
     const skus = extractSkusFromFilename(name);
     if (skus.length === 0) return;
@@ -55,7 +55,7 @@ function main() {
     countFiles += 1;
 
     for (const sku of skus) {
-      const targetPath = path.join(TARGET_DIR, `${sku}.png`);
+      const targetPath = path.join(TARGET_DIR, `${sku}.webp`);
       if (fs.existsSync(targetPath)) {
         // Already created for this SKU, skip to avoid overwriting
         continue;

@@ -50,7 +50,7 @@ async function main() {
     process.exit(1);
   }
   const base = path.parse(pdf).name;
-  const out = path.join(OUT_DIR, `${base}_${pageNum}.png`);
+  const out = path.join(OUT_DIR, `${base}_${pageNum}.webp`);
 
   const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
   const page = await browser.newPage();
@@ -67,7 +67,7 @@ async function main() {
     try { mapping = JSON.parse(fs.readFileSync(MAP_OUT, 'utf8')); } catch {}
   }
   mapping.sku_images = mapping.sku_images || {};
-  const rel = path.posix.join('public', 'images', 'pdf_pages', `${base}_${pageNum}.png`).replace(/\\/g, '/');
+  const rel = path.posix.join('public', 'images', 'pdf_pages', `${base}_${pageNum}.webp`).replace(/\\/g, '/');
   mapping.sku_images[item.sku] = {
     image_path: rel,
     image_type: 'page',

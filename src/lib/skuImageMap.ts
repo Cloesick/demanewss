@@ -35,9 +35,9 @@ export async function getSkuImagePath(sku: string): Promise<string | null> {
 
 function normalizeWebPath(p: string): string {
   // The mapping may use absolute OS paths like
-  //   "C:\\...\\public\\images\\pdf_pages\\foo.png"
+  //   "C:\\...\\public\\images\\pdf_pages\\foo.webp"
   // or relative ones like
-  //   "public/images/pdf_pages/foo.png" or "images/pdf_pages/foo.png".
+  //   "public/images/pdf_pages/foo.webp" or "images/pdf_pages/foo.webp".
   // Convert these into clean web paths rooted at "/".
   const cleaned = p.replace(/\\/g, '/');
 
