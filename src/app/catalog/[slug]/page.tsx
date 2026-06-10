@@ -33,6 +33,14 @@ export default function CatalogProductPage() {
     );
   }
 
+  const pdfHref = (() => {
+    const src = String(product?.pdf_source || '').trim();
+    if (!src) return null;
+    if (src.startsWith('http://') || src.startsWith('https://')) return src;
+    if (src.startsWith('/')) return src;
+    return `/documents/${src}`;
+  })();
+
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -132,7 +140,7 @@ export default function CatalogProductPage() {
                   {product.source_pages.map((page: number) => (
                     <a
                       key={page}
-                      href={`/documents/${product.pdf_source}#page=${page}`}
+                      href={pdfHref ? `${pdfHref}#page=${page}` : '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 text-white rounded-lg transition"
@@ -152,7 +160,7 @@ export default function CatalogProductPage() {
                   Request Quote
                 </button>
                 <a
-                  href={`/documents/${product.pdf_source}`}
+                  href={pdfHref || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 border-2 rounded-lg font-semibold transition"

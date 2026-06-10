@@ -24,6 +24,14 @@ export default function CatalogProductCard({
   const { addToQuote } = useQuote();
   const { productName: getProductName, categoryName, uiText } = useProductTranslation();
 
+  const pdfHref = (() => {
+    const src = String(product?.pdf_source || '').trim();
+    if (!src) return null;
+    if (src.startsWith('http://') || src.startsWith('https://')) return src;
+    if (src.startsWith('/')) return src;
+    return `/documents/${src}`;
+  })();
+
   // Load SKU-specific image from extracted PDFs
   useEffect(() => {
     if (product?.sku) {
@@ -157,7 +165,7 @@ export default function CatalogProductCard({
           </div>
 
           {/* PDF Links */}
-          {product.pdf_source && (
+          {pdfHref && (
             <div className="mt-3 pt-3 border-t border-gray-100 flex gap-3">
               {/* Link to full PDF catalog */}
               <button
@@ -165,7 +173,7 @@ export default function CatalogProductCard({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  window.open(`/documents/${product.pdf_source}`, '_blank', 'noopener,noreferrer');
+                  window.open(pdfHref, '_blank', 'noopener,noreferrer');
                 }}
                 className="text-xs text-blue-600 hover:underline inline-flex items-center cursor-pointer bg-transparent border-0 p-0"
               >
@@ -183,7 +191,7 @@ export default function CatalogProductCard({
                     e.preventDefault();
                     e.stopPropagation();
                     const page = product.source_pages[0];
-                    const pdfUrl = `/documents/${product.pdf_source}#page=${page}&search=${encodeURIComponent(product.sku)}`;
+                    const pdfUrl = `${pdfHref}#page=${page}&search=${encodeURIComponent(product.sku)}`;
                     console.log('Opening PDF to page with highlight:', {
                       sku: product.sku,
                       page: page,
@@ -225,7 +233,7 @@ export default function CatalogProductCard({
         )}
         <Link 
           href={`/catalog/${product.seo?.slug || product.sku.toLowerCase()}`}
-          className={`w-full h-64 flex items-center justify-center p-4 block ${
+          className={`w-full h-64 flex items-center justify-center p-4 ${
             isMakita ? 'bg-gradient-to-br from-teal-50 to-teal-100' : 'bg-white'
           }`}
         >
@@ -329,7 +337,7 @@ export default function CatalogProductCard({
         </div>
 
         {/* PDF Links */}
-        {product.pdf_source && (
+        {pdfHref && (
           <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
             {/* Link to full PDF catalog */}
             <button
@@ -337,7 +345,7 @@ export default function CatalogProductCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                window.open(`/documents/${product.pdf_source}`, '_blank', 'noopener,noreferrer');
+                window.open(pdfHref, '_blank', 'noopener,noreferrer');
               }}
               className="text-xs text-blue-600 hover:underline inline-flex items-center cursor-pointer bg-transparent border-0 p-0 w-full"
             >
@@ -355,7 +363,7 @@ export default function CatalogProductCard({
                   e.preventDefault();
                   e.stopPropagation();
                   const page = product.source_pages[0];
-                  const pdfUrl = `/documents/${product.pdf_source}#page=${page}&search=${encodeURIComponent(product.sku)}`;
+                  const pdfUrl = `${pdfHref}#page=${page}&search=${encodeURIComponent(product.sku)}`;
                   console.log('Opening PDF to page with highlight:', {
                     sku: product.sku,
                     page: page,

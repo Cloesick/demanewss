@@ -3,6 +3,7 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     // Credentials provider for email/password login
     Credentials({
@@ -45,12 +46,15 @@ export const authOptions: NextAuthOptions = {
         return null;
       }
     }),
-    
-    // Google OAuth; requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in env
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    }),
+
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: '/login', // Custom login page

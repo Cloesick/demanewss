@@ -71,6 +71,16 @@ export default function ProductVariantCard({
   
   // Use SKU-specific image if available, otherwise fallback to passed imageUrl
   const displayImageUrl = skuImagePath || imageUrl;
+
+  const pdfViewerHref = (pdfSource?: string, page?: number, sku?: string) => {
+    const src = String(pdfSource || '').trim();
+    if (!src) return null;
+    const params = new URLSearchParams();
+    params.set('file', src);
+    if (page) params.set('page', String(page));
+    if (sku) params.set('sku', sku);
+    return `/pdf-viewer?${params.toString()}`;
+  };
   
   const formatPrice = (priceObj?: { amount?: number; display?: string } | null) => {
     if (!priceObj) return 'Price on request';
@@ -160,7 +170,10 @@ export default function ProductVariantCard({
             {selectedVariant.pdf_source && (
               <button
                 type="button"
-                onClick={() => window.open(`/pdf-viewer?pdf=${selectedVariant.pdf_source}`, '_blank')}
+                onClick={() => {
+                  const href = pdfViewerHref(selectedVariant.pdf_source, undefined, selectedVariant.sku);
+                  if (href) window.open(href, '_blank', 'noopener,noreferrer');
+                }}
                 className="text-xs text-blue-600 hover:underline inline-flex items-center cursor-pointer bg-transparent border-0 p-0 w-full"
               >
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +185,10 @@ export default function ProductVariantCard({
             {selectedVariant.source?.pages?.[0] && selectedVariant.pdf_source && (
               <button
                 type="button"
-                onClick={() => window.open(`/pdf-viewer?pdf=${selectedVariant.pdf_source}&page=${selectedVariant.source?.pages?.[0]}`, '_blank')}
+                onClick={() => {
+                  const href = pdfViewerHref(selectedVariant.pdf_source, selectedVariant.source?.pages?.[0], selectedVariant.sku);
+                  if (href) window.open(href, '_blank', 'noopener,noreferrer');
+                }}
                 className="text-xs text-red-600 hover:underline inline-flex items-center cursor-pointer bg-transparent border-0 p-0 w-full"
               >
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,7 +215,7 @@ export default function ProductVariantCard({
         )}
         <Link 
           href={`/products/${selectedVariant.sku.toLowerCase()}`}
-          className="w-full h-64 bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center p-4 block"
+          className="w-full h-64 bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center p-4"
         >
           <Image
             src={imageUrl}
@@ -290,7 +306,10 @@ export default function ProductVariantCard({
           {selectedVariant.pdf_source && (
             <button
               type="button"
-              onClick={() => window.open(`/pdf-viewer?pdf=${selectedVariant.pdf_source}`, '_blank')}
+              onClick={() => {
+                const href = pdfViewerHref(selectedVariant.pdf_source, undefined, selectedVariant.sku);
+                if (href) window.open(href, '_blank', 'noopener,noreferrer');
+              }}
               className="text-xs text-blue-600 hover:underline inline-flex items-center cursor-pointer bg-transparent border-0 p-0 w-full"
             >
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,7 +321,10 @@ export default function ProductVariantCard({
           {selectedVariant.source?.pages?.[0] && selectedVariant.pdf_source && (
             <button
               type="button"
-              onClick={() => window.open(`/pdf-viewer?pdf=${selectedVariant.pdf_source}&page=${selectedVariant.source?.pages?.[0]}`, '_blank')}
+              onClick={() => {
+                const href = pdfViewerHref(selectedVariant.pdf_source, selectedVariant.source?.pages?.[0], selectedVariant.sku);
+                if (href) window.open(href, '_blank', 'noopener,noreferrer');
+              }}
               className="text-xs text-red-600 hover:underline inline-flex items-center cursor-pointer bg-transparent border-0 p-0 w-full"
             >
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
