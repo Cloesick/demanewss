@@ -3,6 +3,7 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     // Credentials provider for email/password login
     Credentials({
@@ -12,45 +13,56 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // This is a simple example - replace with your actual authentication logic
-        // For development, we'll accept any email/password combination
-        // In production, you should verify against a database
-        
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
-
-        // Example: Accept any valid email for testing
-        // TODO: Replace with real database authentication
         const email = credentials.email.toLowerCase();
-        
-        // Check if admin (demashop.be domain or specific gmail)
-        const isDemashopDomain = email.endsWith('@demashop.be');
-        const isAliasAdmin = email === 'nicolas.cloet@gmail.com';
-        const role = (isDemashopDomain || isAliasAdmin) ? 'admin' : 'user';
-        const aliasEmail = isAliasAdmin ? 'nicolas@demashop.be' : email;
 
-        // For testing, accept any email with password length > 0
-        // In production, verify password hash from database
-        if (credentials.password.length > 0) {
-          return {
-            id: email,
-            email: email,
-            name: email.split('@')[0],
-            role: role,
-            aliasEmail: aliasEmail,
-          };
+        // SECURITY: credentials login is gated behind explicit env configuration so an
+        // arbitrary email/password can never authenticate (prevents anonymous access).
+        // Enable it by setting CREDENTIALS_LOGIN_EMAIL + CREDENTIALS_LOGIN_PASSWORD, or
+        // ALLOW_DEV_CREDENTIALS=true for a dev-only bypass (never honored in production).
+        const allowedEmail = process.env.CREDENTIALS_LOGIN_EMAIL?.toLowerCase();
+        const allowedPassword = process.env.CREDENTIALS_LOGIN_PASSWORD;
+        const devBypass =
+          process.env.NODE_ENV !== 'production' &&
+          process.env.ALLOW_DEV_CREDENTIALS === 'true';
+
+        let authenticated = false;
+        if (allowedEmail && allowedPassword) {
+          authenticated = email === allowedEmail && credentials.password === allowedPassword;
+        } else if (devBypass) {
+          authenticated = credentials.password.length > 0;
+        }
+        if (!authenticated) {
+          return null;
         }
 
-        return null;
+        // Role comes from a server-side allowlist (ADMIN_EMAILS), never the client email alone.
+        const adminEmails = (process.env.ADMIN_EMAILS || '')
+          .split(',')
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean);
+        const role = adminEmails.includes(email) ? 'admin' : 'user';
+
+        return {
+          id: email,
+          email,
+          name: email.split('@')[0],
+          role,
+          aliasEmail: email,
+        };
       }
     }),
-    
-    // Google OAuth; requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in env
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    }),
+
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: '/login', // Custom login page
@@ -67,15 +79,19 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async jwt({ token, account, profile }) {
-      // Determine admin role based on email domain or explicit mapping
+      // Admin role from a server-side allowlist (ADMIN_EMAILS). For Google OAuth the
+      // email is provider-verified; a verified @demashop.be domain also grants admin.
       const email = (profile as any)?.email || token.email || '';
       const emailLower = String(email).toLowerCase();
+      const adminEmails = (process.env.ADMIN_EMAILS || '')
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean);
+      const isAdminAllowlisted = adminEmails.includes(emailLower);
       const isDemashopDomain = emailLower.endsWith('@demashop.be');
-      const isAliasAdmin = emailLower === 'nicolas.cloet@gmail.com';
-      const aliasEmail = isAliasAdmin ? 'nicolas@demashop.be' : emailLower;
-      const role = (isDemashopDomain || isAliasAdmin) ? 'admin' : 'user';
+      const role = isAdminAllowlisted || isDemashopDomain ? 'admin' : 'user';
       token.role = role;
-      token.aliasEmail = aliasEmail;
+      token.aliasEmail = emailLower;
       return token;
     },
   },

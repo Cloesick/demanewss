@@ -598,10 +598,8 @@ export async function getProducts(_filters?: ProductFilters): Promise<Product[]>
           // analysis-based mapping did not yield an image).
           try {
             if (!merged.imageUrl) {
-              const resolved = await resolveImageForProduct(merged);
-              if (resolved) {
-                merged.imageUrl = resolved;
-              }
+              // Intentionally left blank: avoid runtime filesystem scanning under
+              // public/product-images which can cause serverless bundle bloat.
             }
           } catch {
             // Ignore resolution errors and keep product as-is

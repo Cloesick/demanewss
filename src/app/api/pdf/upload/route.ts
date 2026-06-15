@@ -7,15 +7,6 @@ import { writeFile } from 'fs/promises';
 
 export const dynamic = 'force-dynamic';
 
-// Configure max file size (50MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  },
-};
-
 interface PdfUpload {
   id: string;
   filename: string;

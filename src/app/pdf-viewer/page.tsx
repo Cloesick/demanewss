@@ -12,7 +12,7 @@ const PDFViewerWithHighlight = dynamic(
 
 function PDFViewerContent() {
   const searchParams = useSearchParams();
-  const pdfFile = searchParams.get('file');
+  const pdfFile = searchParams.get('file') || searchParams.get('pdf');
   const page = searchParams.get('page');
   const sku = searchParams.get('sku');
 
@@ -27,15 +27,32 @@ function PDFViewerContent() {
     );
   }
 
-  const pdfUrl = `/documents/${pdfFile}`;
+  const pdfUrl = (() => {
+    const s = String(pdfFile || '').trim();
+    if (!s) return '';
+    if (s.startsWith('http://') || s.startsWith('https://')) return s;
+    if (s.startsWith('/')) return s;
+    return `/documents/${s}`;
+  })();
   const pageNum = page ? parseInt(page, 10) : 1;
+  const fileName = (() => {
+    const s = String(pdfFile || '').trim();
+    if (!s) return '';
+    try {
+      const u = new URL(s);
+      return decodeURIComponent(u.pathname.split('/').pop() || s);
+    } catch {
+      const p = s.split('?')[0];
+      return decodeURIComponent(p.split('/').pop() || s);
+    }
+  })();
 
   return (
     <PDFViewerWithHighlight
       pdfUrl={pdfUrl}
       page={pageNum}
       searchTerm={sku || undefined}
-      fileName={pdfFile}
+      fileName={fileName}
     />
   );
 }
