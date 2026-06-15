@@ -229,14 +229,18 @@ export async function getProducts(_filters?: ProductFilters): Promise<Product[]>
   try {
     const filePath = path.resolve(process.cwd(), 'public', 'data', 'products_for_shop.json');
     const catalogPath = path.resolve(process.cwd(), 'src', 'data', 'catalog_products.json');
-    // Invalidate cache in development or when the file changes
-    const stat = await fs.stat(filePath);
-    const mtimeMs = stat.mtimeMs;
+    // Invalidate cache when the shop file changes; tolerate it being absent
+    let mtimeMs: number | null = null;
+    try {
+      mtimeMs = (await fs.stat(filePath)).mtimeMs;
+    } catch {
+      mtimeMs = null; // products_for_shop.json may not exist; fall back to catalog data
+    }
     const shouldReload =
       !productsCache ||
-      productsCacheMtimeMs === null ||
-      mtimeMs !== productsCacheMtimeMs ||
-      process.env.NODE_ENV === 'development';
+      productsCache.length === 0 ||
+      process.env.NODE_ENV === 'development' ||
+      (mtimeMs !== null && mtimeMs !== productsCacheMtimeMs);
 
     if (shouldReload) {
       // Load catalog products first
@@ -248,13 +252,17 @@ export async function getProducts(_filters?: ProductFilters): Promise<Product[]>
       } catch (catalogError) {
         console.log('ℹ️ No catalog products found, using shop products only');
       }
-      
-      const file = await fs.readFile(filePath, 'utf-8');
-      const data = JSON.parse(file);
-      productsCacheMtimeMs = mtimeMs;
 
-      // Merge shop products and catalog products (deduplicate by SKU)
-      const shopProducts = Array.isArray(data) ? data : (data.products || []);
+      // Shop products are optional — fall back to catalog-only when the file is absent
+      let shopProducts: any[] = [];
+      try {
+        const file = await fs.readFile(filePath, 'utf-8');
+        const data = JSON.parse(file);
+        shopProducts = Array.isArray(data) ? data : (data.products || []);
+      } catch {
+        console.log('ℹ️ No products_for_shop.json found, using catalog products only');
+      }
+      productsCacheMtimeMs = mtimeMs;
       
       // Create a map to deduplicate by SKU (shop products take priority)
       const productsBySku = new Map<string, any>();
@@ -276,9 +284,8 @@ export async function getProducts(_filters?: ProductFilters): Promise<Product[]>
       });
       
       const productsArray = Array.from(productsBySku.values());
-      
       if (!Array.isArray(productsArray)) {
-        console.error('Expected an array of products but got:', typeof data);
+        console.error('Expected an array of products but got:', typeof productsArray);
         productsCache = [];
       } else {
         const duplicatesRemoved = (shopProducts.length + catalogProducts.length) - productsArray.length;
@@ -431,6 +438,7 @@ export async function getProducts(_filters?: ProductFilters): Promise<Product[]>
 
         // Build products and attach normalized image URL where possible
         const mappedProducts = await Promise.all(productsArray.map(async (item: any, index: number): Promise<Product> => {
+         try {
           const description: string = String(item.description || '');
 
           // Extract webshop-specific fields from products_for_shop.json
@@ -606,14 +614,24 @@ export async function getProducts(_filters?: ProductFilters): Promise<Product[]>
           }
 
           return merged;
+         } catch (itemErr) {
+           // One malformed product must not zero-out the whole catalog
+           console.warn(`Skipping product mapping for index ${index} (sku=${item?.sku ?? item?.id}):`, itemErr);
+           return {
+             sku: item?.sku || item?.id || `product-${index}`,
+             name: item?.name || String(item?.description || 'Product').split('\n')[0].slice(0, 60) || 'Product',
+             description: String(item?.description || ''),
+             product_category: item?.product_category || item?.category || 'Uncategorized',
+           } as Product;
+         }
         }));
 
         productsCache = mappedProducts;
       }
     }
   } catch (error) {
-    console.error('Error loading product data from file:', error);
-    productsCache = [];
+    console.error('Error loading product data:', error);
+    if (!productsCache) productsCache = []; // keep any previously-loaded data on transient errors
   }
 
   // Note: Filtering is applied in the API route; return all products here.

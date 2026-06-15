@@ -316,7 +316,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const filters = parseQueryParams(searchParams);
-    
+
     console.log('Fetching products with filters:', JSON.stringify(filters, null, 2));
     
     // Load products from the data source
