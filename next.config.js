@@ -17,6 +17,19 @@ const nextConfig = {
   
   // Add production browser source maps for better debugging
   productionBrowserSourceMaps: true,
+
+  // Keep large static asset trees out of serverless function bundles.
+  // `public/product-images` (27k+ files, ~387 MB) and `public/documents`
+  // (catalog PDFs) are served statically from the CDN and never read by
+  // server code at runtime — only product JSON under `public/data` is.
+  // Bundling them pushed multiple functions past Vercel's 250 MB limit.
+  // (Top-level key in Next 15+; was experimental.outputFileTracingExcludes before.)
+  outputFileTracingExcludes: {
+    '*': [
+      './public/product-images/**',
+      './public/documents/**',
+    ],
+  },
 }
 
 module.exports = nextConfig
