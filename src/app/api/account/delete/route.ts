@@ -36,35 +36,20 @@ export async function DELETE(request: NextRequest) {
 
     const userEmail = session.user.email;
 
-    // In production, delete user and all related data:
-    // await db.$transaction([
-    //   db.order.deleteMany({ where: { userId: user.id } }),
-    //   db.quote.deleteMany({ where: { userId: user.id } }),
-    //   db.address.deleteMany({ where: { userId: user.id } }),
-    //   db.session.deleteMany({ where: { userId: user.id } }),
-    //   db.user.delete({ where: { id: user.id } }),
-    // ]);
+    // GDPR: do NOT report success when no deletion actually happens. There is no
+    // user store wired yet, so we record the erasure request for manual processing
+    // and tell the user honestly that it is pending. When a DB is connected, replace
+    // this with a real transactional delete of user + orders/quotes/addresses/sessions
+    // and a confirmation email.
+    console.warn(`[ACCOUNT-DELETE] Erasure request received for ${userEmail} — manual processing required (no user store configured).`);
 
-    // For development, log the deletion
-    console.log(`[MOCK] Account deletion requested for: ${userEmail}`);
-    console.log(`[MOCK] In production, this would delete:`);
-    console.log(`  - User account: ${userEmail}`);
-    console.log(`  - All orders`);
-    console.log(`  - All quotes`);
-    console.log(`  - All addresses`);
-    console.log(`  - All sessions`);
-
-    // Send confirmation email (in production)
-    // await sendEmail({
-    //   to: userEmail,
-    //   subject: 'Account Deletion Confirmation',
-    //   template: 'account-deleted',
-    // });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Account deleted successfully',
-    });
+    return NextResponse.json(
+      {
+        error: 'Account deletion is not yet automated. Your erasure request has been recorded and will be processed manually.',
+        status: 'pending',
+      },
+      { status: 501 }
+    );
 
   } catch (error) {
     console.error('Account deletion error:', error);

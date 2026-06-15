@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/auth';
 import { getClient, setLastSent } from '@/lib/marketingStore';
 import { getProducts } from '@/lib/products';
 
 export async function POST(request: Request) {
   try {
+    // Auth: this triggers an outbound email — require an admin session, or a
+    // server-side secret for automated/cron callers. (Was previously open to anyone.)
+    const secret = process.env.MARKETING_API_SECRET;
+    const authHeader = request.headers.get('authorization') || '';
+    const hasValidSecret = !!secret && authHeader === `Bearer ${secret}`;
+    if (!hasValidSecret) {
+      const session = await getServerSession(authOptions);
+      if ((session?.user as any)?.role !== 'admin') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     const body = await request.json();
     const clientId = String(body.clientId || '').trim();
     if (!clientId) return NextResponse.json({ error: 'Missing clientId' }, { status: 400 });
